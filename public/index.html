@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Planning Poker</title>
+    <link rel="stylesheet" href="./styles.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://unpkg.com/vue@2/dist/vue.min.js"></script>
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"
+        integrity="sha384-KAZ4DtjNhLChOB/hxXuKqhMLYvx3b5MlT55xPEiNmREKRzeEm+RVPlTnAn0ajQNs"
+        crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div id="app">
+        <div v-if="loading" class="backdrop-loader">
+            <div class="card_container">
+                <div class="card_page teal">
+                    <i class="material-icons white-text medium card_icon">close</i>
+                </div>
+                <div class="card_page teal">
+                    <i class="material-icons white-text medium card_icon">done</i>
+                </div>
+                <div class="card_page blue">
+                    <h2 class="card_icon">1</h2>
+                </div>
+            </div>
+            <h4>LOADING</h4>
+        </div>
+        <main>
+            <nav class="nav-extended blue">
+                <div class="nav-wrapper">
+                    <a class="brand-logo center">{{ title }}</a>
+                    <ul class="right" v-if="socket && !loading">
+
+                        <!-- Desktop Begin -->
+                        <li v-if="socket" class="hide-on-med-and-down session-btn">
+                            <a class="waves-effect waves-light">
+                                <i class="material-icons left">computer</i>{{ session }}
+                            </a>
+                        </li>
+
+                        <li v-if="socket" class="hide-on-med-and-down issues-btn">
+                            <a class="waves-effect waves-light modal-trigger" href="#modalIssues">
+                                <i class="material-icons left">featured_play_list</i>Issues
+                            </a>
+                        </li>
+
+                        <li class="hide-on-med-and-down exit-btn">
+                            <a class="waves-effect waves-light" v-on:click="logout()">
+                                <i class="material-icons right">exit_to_app</i>Logout
+                            </a>
+                        </li>
+                        <li class="hide-on-med-and-down">
+                            <a class="waves-effect waves-light share-btn" v-on:click="copyLink()">
+                                <i class="material-icons right">share</i>Share
+                            </a>
+                        </li>
+                        <!-- Desktop End -->
+
+                        <!-- Mobile Begin -->
+                        <li v-if="socket" class="hide-on-med-and-up show-on-medium-and-down session-btn">
+                            <a class="waves-effect waves-light">
+                                <i class="material-icons">computer</i>
+                            </a>
+                        </li>
+                        <li v-if="socket" class="hide-on-med-and-up show-on-medium-and-down issues-btn">
+                            <a class="waves-effect waves-light modal-trigger" href="#modalIssues">
+                                <i class="material-icons">featured_play_list</i>
+                            </a>
+                        </li>
+                        <li class="hide-on-med-and-up show-on-medium-and-down exit-btn">
+                            <a class="waves-effect waves-light" v-on:click="logout()">
+                                <i class="material-icons">exit_to_app</i>
+                            </a>
+                        </li>
+                        <li class="hide-on-med-and-up show-on-medium-and-down">
+                            <a class="waves-effect waves-light share-btn" v-on:click="copyLink()">
+                                <i class="material-icons">share</i>
+                            </a>
+                        </li>
+                        <!-- Mobile End -->
+                    </ul>
+                </div>
+                <div class="nav-content center">
+                    <!-- Login Begin -->
+                    <div class="row" v-if="!socket || loading">
+                        <form class="col s12 m12">
+                            <div class="row mb-0">
+                                <div class="input-field col s12 m6 mt-1">
+                                    <i class="material-icons prefix">computer</i>
+                                    <input id="server" type="text" class="validate" v-model="session">
+                                    <label for="server">Server</label>
+                                </div>
+                                <div class="input-field col s12 m6 mt-1">
+                                    <i class="material-icons prefix">person</i>
+                                    <input id="username" type="text" class="validate" v-model="username">
+                                    <label for="username">Username</label>
+                                </div>
+                                <div class="col s6 m6 pt-1">
+                                    <a class="waves-effect waves-light btn right" v-on:click="joinToSession(false)">Join
+                                        as 👁️</a>
+                                </div>
+                                <div class="col s6 m6 pt-1">
+                                    <a class="waves-effect waves-light btn left" v-on:click="joinToSession(true)">Join
+                                        as 🃏</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- Login End -->
+
+                    <!-- Header Begin-->
+                    <span class="nav-title py-0" v-else>
+                        <div v-if="winner.length" class="edaem">{{ winnerData }}</div>
+                        <i v-else class="material-icons">donut_large</i>
+                    </span>
+                    <div class="row" v-if="socket && !loading">
+                        <div class="input-field col s10 m10 offset-s1 offset-m1">
+                            <h5 v-if="issues.selected">{{ issuesData }}
+                            </h5>
+                            <h5 v-else>Waiting for a issue...</h5>
+                        </div>
+                    </div>
+                    <a v-if="socket && !loading && admin && issues.selected"
+                        class="btn-floating btn-large halfway-fab waves-effect waves-light left"
+                        v-on:click="revealScores({ ws})"
+                        v-bind:disabled="!visibility || !scores.length || !scores.length">
+                        <i class="material-icons">3d_rotation</i>
+                    </a>
+                    <a v-if="socket && !loading && admin && issues.selected"
+                        class="btn-floating btn-large halfway-fab waves-effect waves-light right"
+                        v-on:click="clearScores({ ws })"
+                        v-bind:disabled="(!delete_forever && !visibility) || !scores.length">
+                        <i class="material-icons">delete_forever</i>
+                    </a>
+                    <!-- Header End -->
+                </div>
+            </nav>
+
+            <div class="container center main-div">
+                <div class="row card-score" v-if="socket && !loading">
+
+                    <!-- Scores Begin -->
+                    <transition-group v-if="scores.length" name="player">
+                        <div class="col xl2 l2 m2 s6 center flip-card" v-for="(score, index) in scores"
+                            v-bind:key="index+1">
+                            <p class="z-depth-3">
+                            <div class="flip-card">
+                                <div class="flip-card-inner" v-bind:class="{'reveal' : reveal}">
+                                    <div class="card-panel teal flip-card-front">
+                                        <div v-if="admin">
+                                            <i v-if="!score.admin" v-on:click="makeAdmin(score)"
+                                                class="material-icons btn-floating waves-effect waves-light admin-options red">grade</i>
+                                            <i v-if="!score.admin" v-on:click="changePerspective({ ws: score.ws })"
+                                                class="material-icons btn-floating waves-effect waves-light admin-options red">visibility</i>
+                                            <i v-if="!score.admin" v-on:click="kickUser(score)"
+                                                class="material-icons btn-floating waves-effect waves-light admin-options red">remove</i>
+                                        </div>
+                                        <i v-if="score.admin" class="material-icons admin-badge">grade</i>
+                                        <i class="material-icons large points-badge">{{ !score.points ? 'close' : 'done'
+                                            }}</i>
+                                    </div>
+                                    <div class="card-panel blue flip-card-back">
+                                        <h1 v-if="reveal" class="points-badge">{{ resolvePoints(score.points) }}</h1>
+                                        <h6 v-else class="points-badge">Se te perdió algo?<br>🤔</h6>
+                                    </div>
+                                </div>
+                                <p v-if="ws === score.ws"><strong>(me)</strong></p>
+                                <p v-else class="truncate">{{ score.username }}</p>
+                            </div>
+                            </p>
+                        </div>
+                    </transition-group>
+                    <!-- Scores End -->
+
+                    <!-- Empty Begin -->
+                    <div class="greetings center" v-else>
+                        <i class="material-icons large grey-text">sentiment_neutral</i>
+                        <h4 class="grey-text">There are no players here!</h4>
+                    </div>
+                    <!-- Empty End -->
+
+                </div>
+
+                <!-- Greetings Begin -->
+                <div class="greetings center" v-else>
+                    <i class="material-icons large grey-text">pan_tool</i>
+                    <h4 class="grey-text">Welcome!</h4>
+                </div>
+                <!-- Greetings End -->
+            </div>
+        </main>
+
+        <footer class="page-footer red">
+            <div class="container">
+                <!-- Footer Begin -->
+                <div class="row center" v-if="socket && !loading">
+                    <h5 class="truncate mx-0">{{ admin ? '(⭐)' : '' }} {{ perspective ? `(🃏) ${username}` : `(👁️)
+                        ${username}`}}</h5>
+                </div>
+                <div class="row center" v-if="socket && !loading && perspective && issues.selected">
+                    <a class="waves-effect waves-light btn-large btn-options" :style="dynamicStyle(1)"
+                        v-on:click="sendData({ action: 'save' }, 1)" v-bind:disabled="reveal">1</a>
+                    <a class="waves-effect waves-light btn-large btn-options" :style="dynamicStyle(2)"
+                        v-on:click="sendData({ action: 'save' }, 2)" v-bind:disabled="reveal">2</a>
+                    <a class="waves-effect waves-light btn-large btn-options" :style="dynamicStyle(3)"
+                        v-on:click="sendData({ action: 'save' }, 3)" v-bind:disabled="reveal">3</a>
+                    <a class="waves-effect waves-light btn-large btn-options" :style="dynamicStyle(5)"
+                        v-on:click="sendData({ action: 'save' }, 5)" v-bind:disabled="reveal">5</a>
+                    <a class="waves-effect waves-light btn-large btn-options" :style="dynamicStyle(8)"
+                        v-on:click="sendData({ action: 'save' }, 8)" v-bind:disabled="reveal">8</a>
+                    <a class="waves-effect waves-light btn-large btn-options" :style="dynamicStyle(13)"
+                        v-on:click="sendData({ action: 'save' }, 13)" v-bind:disabled="reveal">13</a>
+                    <a class="waves-effect waves-light btn-large btn-options" :style="dynamicStyle(-1)"
+                        v-on:click="sendData({ action: 'save' }, -1)" v-bind:disabled="reveal">❓</a>
+                    <a class="waves-effect waves-light btn-large btn-options" :style="dynamicStyle(-2)"
+                        v-on:click="sendData({ action: 'save' }, -2)" v-bind:disabled="reveal">☕</a>
+                </div>
+                <div class="row center" v-if="!socket || loading">
+                    <h4>Join a server to get started!</h4>
+                </div>
+                <!-- Footer End -->
+            </div>
+        </footer>
+
+        <!-- Emojis Begin -->
+        <emoji-picker v-show="emojis" class="dark" emoji-version="15.0"></emoji-picker>
+
+        <div v-if="socket && !loading" class="fixed-action-btn left">
+            <a v-on:click="emojis = !emojis" :disabled="btnEmojis"
+                class="waves-effect waves-light btn-floating btn-disabled pink">
+                <i class="large material-icons">insert_emoticon</i>
+            </a>
+        </div>
+        <!-- Emojis End -->
+
+        <!-- Spectator Begin -->
+        <div v-if="socket && !loading" class="fixed-action-btn">
+            <a v-show="!spectators.length" v-on:click="changePerspective({ ws })" :disabled="btnSpectators"
+                class="waves-effect waves-light btn-floating deep-orange">
+                <i class="large material-icons">visibility</i>
+            </a>
+            <a v-show="spectators.length" v-on:click="changePerspective({ ws })" :disabled="btnSpectators"
+                class="waves-effect waves-light btn-floating deep-orange tooltipped" data-position="top"
+                v-bind:data-tooltip="toolTipData">
+                <i class="large material-icons">visibility</i>
+            </a>
+            <span class="box-flying">{{ spectators.length || 0 }}</span>
+        </div>
+        <!-- Spectator End -->
+
+        <!-- Modal Begin -->
+        <div id="modalIssues" class="modal bottom-sheet brown">
+            <div class="modal-content">
+
+                <h4 class="header white-text">
+                    <i class="material-icons">featured_play_list</i>
+                    Issues List
+                    <a v-if="!newIssue && admin" class="waves-effect waves-light btn blue right"
+                        v-on:click="newIssue = true, issuesArea = null">
+                        <i class="material-icons left">add</i>New Issue
+                    </a>
+                    <a v-if="newIssue && admin" class="waves-effect waves-light btn red right"
+                        v-on:click="newIssue = false, issuesArea = null">
+                        <i class="material-icons">close</i>
+                    </a>
+                    <a v-if="newIssue && admin" class="waves-effect waves-light btn blue right mr-1"
+                        v-on:click="changeIssues" :disabled="!issuesArea">
+                        <i class="material-icons">save</i>
+                    </a>
+                </h4>
+
+                <h4 v-if="newIssue && admin" class="header white-text">
+                    <div class="input-field">
+                        <i class="material-icons prefix">mode_edit</i>
+                        <textarea id="icon_prefix2" class="materialize-textarea" v-model="issuesArea"></textarea>
+                        <label for="icon_prefix2">Type a issue or multiple separated by break lines</label>
+                    </div>
+                </h4>
+
+                <ul class="collection">
+                    <li v-if="!issues.issues.length" class="deep-orange">
+                        <h4 class="large center white-text bold">(empty)</h4>
+                    </li>
+
+                    <li class="collection-item avatar" :class="{ 'teal white-text' : issues.selected === issue.index}"
+                        v-for="(issue, index) in issues.issues" v-bind:key="index+1">
+
+                        <!-- Admin -->
+                        <div v-if="admin">
+                            <i class="secondary-content waves-effect waves-light circle blue"
+                                v-on:click="selectIssue(issue.index)">{{ index + 1 }}</i>
+                            <h6>{{ issue.issue }}</h6>
+                            <h6 v-if="issues.selected !== issue.index" class="col bold py-2">{{ `${issue.points} points`
+                                }}
+                            </h6>
+                            <select v-else class="browser-default" v-on:change="setPoints(issue.index, $event)"
+                                v-model="issue.points">
+                                <option value="0">0 points</option>
+                                <option value="1">1 points</option>
+                                <option value="2">2 points</option>
+                                <option value="3">3 points</option>
+                                <option value="5">5 points</option>
+                                <option value="8">8 points</option>
+                                <option value="13">13 points</option>
+                            </select>
+                            <a class="secondary-content waves-effect waves-light btn-floating red"
+                                v-on:click="removeIssue(issue.index)">
+                                <i class="material-icons">remove</i>
+                            </a>
+                        </div>
+
+                        <!-- Player -->
+                        <div v-else>
+                            <i class="secondary-content waves-effect waves-light circle blue">{{ index + 1 }}</i>
+                            <h6>{{ issue.issue }}</h6>
+                            <h6 class="col bold py-2">{{ `${issue.points} points` }}</h6>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!-- Modal End -->
+
+    </div>
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+<script>
+    const app = new Vue({
+        el: '#app',
+        data: {
+            loading: false,
+            admin: false,
+            perspective: false,
+            reveal: false,
+            completedScores: false,
+            visibility: false,
+            delete_forever: false,
+            emojis: false,
+            newIssue: false,
+            btnEmojis: false,
+            btnSpectators: false,
+            issuesArea: null,
+            winner: null,
+            socket: null,
+            ws: null,
+            username: '',
+            session: '',
+            points: 0,
+            timeout: 2000,
+            issues: {
+                selected: null,
+                issues: []
+            },
+            scores: [],
+            spectators: [],
+            validPoints: [-2, -1, 0, 1, 2, 3, 5, 8, 13],
+            title: 'Planning Poker',
+            server: 'devstrauss-data-sockets-service-planning-poker',
+            // host: 'http://localhost:3000',
+            host: 'https://planning-poker-api.up.railway.app',
+            jsConfetti: new JSConfetti()
+        },
+        methods: {
+            sendData({ action, user }, points) {
+                if (this.socket) {
+                    this.points = points
+                    let data = null
+
+                    if (action === 'save' && this.validateInputPoints()) {
+                        data = {
+                            action,
+                            user: {
+                                username: this.username,
+                                points: this.points,
+                                ws: this.ws,
+                            }
+                        }
+                    } else {
+                        data = { action, user }
+                    }
+
+                    this.socket.emit(this.server, data)
+                }
+            },
+            receivedScores(data) {
+                this.scores = data.scores || []
+                this.spectators = data.spectators || []
+                this.reveal = data.reveal
+                this.visibility = data.visibility
+                this.delete_forever = data.delete_forever
+                this.issues = data.issues ? data.issues : { selected: null, issues: [] }
+                this.points = ((data.winner || []).length && data.clear) || (!(data.winner || []).length && data.clear) ? 0 : this.points
+                this.winner = (data.winner || []).map(points => {
+                    return this.resolvePoints(points)
+                })
+            },
+            validateInputPoints() {
+                if (this.validPoints.includes(this.points)) {
+                    return true
+                } else {
+                    M.toast({ html: 'Choose a valid point option!', classes: 'rounded' })
+                    return false
+                }
+            },
+            validateInputUsername() {
+                if ((this.username.length > 0 && this.username.length <= 15) && this.username !== null && this.username !== undefined) {
+                    return true
+                } else {
+                    M.toast({ html: 'Type a valid username! (No empty and 15 characters max)', classes: 'rounded' })
+                    return false
+                }
+            },
+            validateInputSession() {
+                if (this.session.length > 0 && this.session !== null && this.session !== undefined) {
+                    return true
+                } else {
+                    M.toast({ html: 'Type a valid server! (No empty and 15 characters max)', classes: 'rounded' })
+                    return false
+                }
+            },
+            revealScores(user) {
+                this.sendData({ action: 'reveal', user }, this.points)
+            },
+            clearScores(user) {
+                this.sendData({ action: 'clear', user }, null)
+            },
+            kickUser(user) {
+                this.sendData({ action: 'kick', user }, null)
+            },
+            changePerspective(user) {
+                this.btnSpectators = true
+                this.sendData({ action: 'perspective', user }, this.points)
+                setTimeout(() => {
+                    this.btnSpectators = false
+                }, this.timeout * 2)
+            },
+            makeAdmin(user) {
+                this.sendData({ action: 'admin', user }, this.points)
+            },
+            changeIssues() {
+                let issues = this.issues.issues
+                this.issuesArea.split('\n').map(_ => _.trim()).filter(_ => _.length > 0).forEach((issue, i) => {
+                    issues.push({
+                        index: 'id-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                        issue,
+                        points: 0
+                    })
+                })
+                this.issues.issues = issues
+                this.newIssue = false
+                this.issuesArea = null
+                this.sendData({ action: 'issues', user: { ws: this.ws, issues: this.issues } }, this.points)
+            },
+            setPoints(index, { target: { value } }) {
+                if ([0, 1, 2, 3, 5, 8, 13].includes(Number(value))) {
+                    this.issues.issues = this.issues.issues.map(
+                        issue => issue.index === index ? { ...issue, points: value } : issue
+                    )
+                    this.sendData({ action: 'issues', user: { ws: this.ws, issues: this.issues } }, null)
+                    this.sendData({ action: 'clear', user: { ws: this.ws } }, null)
+                }
+            },
+            selectIssue(index) {
+                if (this.issues.selected === index) { this.issues.selected = null }
+                else { this.issues.selected = index }
+                this.sendData({ action: 'issues', user: { ws: this.ws, issues: this.issues } }, null)
+                this.sendData({ action: 'clear', user: { ws: this.ws } }, null)
+            },
+            removeIssue(index) {
+                if (this.issues.selected === index) {
+                    this.issues.selected = null
+                    this.sendData({ action: 'clear', user: { ws: this.ws } }, null)
+                }
+                this.issues.issues = this.issues.issues.filter(data => data.index !== index)
+                this.sendData({ action: 'issues', user: { ws: this.ws, issues: this.issues } }, this.points)
+            },
+            throwEmojis(emojis) {
+                this.btnEmojis = true
+                this.sendData({ action: 'emojis', user: { ws: this.ws, username: this.username, emojis } }, this.points)
+                setTimeout(() => {
+                    this.btnEmojis = false
+                }, this.timeout * 2)
+            },
+            resolvePoints(points) {
+                switch (points) {
+                    case -1:
+                        points = '❓'
+                        break
+                    case -2:
+                        points = '☕'
+                        break
+                    case 69:
+                        points = '👾'
+                        break
+                    default:
+                        break
+                }
+
+                return points
+            },
+            joinToSession(perspective) {
+                if (this.validateInputSession() && this.validateInputUsername()) {
+                    const locationHREF = window.location.href
+                    const newURL = new URL(locationHREF)
+                    newURL.searchParams.set("session", this.session)
+                    window.history.pushState({ path: newURL.href }, '', newURL.href)
+
+                    this.loading = true
+                    this.perspective = perspective
+                    const socketOptions = {
+                        transportOptions: {
+                            polling: {
+                                extraHeaders: {
+                                    session: this.session,
+                                    username: this.username,
+                                    perspective: this.perspective
+                                }
+                            }
+                        }
+                    }
+                    setTimeout(() => {
+                        this.socket = io(this.host, socketOptions)
+                        this.socket.on(this.session, (response) => {
+                            this.loading = false
+
+                            if (response.reason) {
+                                M.toast({ html: response.reason, classes: 'rounded deep-orange' })
+                            }
+
+                            if (response.kick || response.ban) {
+                                this.socket.close()
+                                this.socket = null
+                                this.points = 0
+                                this.ws = null
+                            }
+
+                            if (response.joinOrLeft && response.show) {
+                                const { joinOrLeft, left, user } = response
+                                M.toast({
+                                    html: user === this.ws ? `Welcome ${this.username}!` : joinOrLeft,
+                                    classes: `rounded ${left ? 'brown' : 'teal'}`
+                                })
+                            }
+
+                            if (response.perspective !== undefined) {
+                                this.btnSpectators = true
+                                this.points = 0
+                                this.perspective = response.perspective
+                                setTimeout(() => {
+                                    this.btnSpectators = false
+                                }, this.timeout)
+                            } else if (response.admin !== undefined) {
+                                this.admin = response.admin
+                            } else if (response.ws !== undefined) {
+                                this.ws = response.ws
+                            } else if (response.emojis !== undefined) {
+                                const { ws, username, emojis } = response.emojis
+                                this.emojis = false
+                                M.toast({
+                                    html: `${ws === this.ws ? '<strong>(me)</strong>' : username}: ${emojis}`,
+                                    classes: 'rounded'
+                                })
+                                this.jsConfetti.addConfetti({
+                                    emojis: [emojis],
+                                    confettiRadius: Math.floor(Math.random() * 100), // Min: 0, Max: 100,
+                                    emojiSize: Math.floor(Math.random() * 100) + 50, // Min: 50, Max: 100
+                                    confettiNumber: Math.floor(Math.random() * 4) + 1, // Min: 1, Max: 5
+
+                                })
+                            } else {
+                                this.receivedScores(response)
+                            }
+                        })
+                        this.socket.on("disconnect", (reason) => {
+                            M.toast({ html: 'Server disconnection!', classes: 'rounded red' })
+                            this.socket.close()
+                            this.loading = false
+                            this.admin = false
+                            this.perspective = false
+                            this.reveal = false
+                            this.completedScores = false
+                            this.visibility = false
+                            this.delete_forever = false
+                            this.emojis = false
+                            this.newIssue = false
+                            this.btnEmojis = false
+                            this.btnSpectators = false
+                            this.issuesArea = null
+                            this.winner = null
+                            this.socket = null
+                            this.ws = null
+                            this.points = 0
+                            this.issues = {
+                                selected: null,
+                                issues: []
+                            }
+                        })
+                        this.socket.on("connect_error", (err) => {
+                            if (this.socket) M.toast({ html: 'Server is having issues! ' + err, classes: 'rounded red' })
+                            this.socket.close()
+                            this.loading = false
+                            this.admin = false
+                            this.perspective = false
+                            this.reveal = false
+                            this.completedScores = false
+                            this.visibility = false
+                            this.delete_forever = false
+                            this.emojis = false
+                            this.newIssue = false
+                            this.btnEmojis = false
+                            this.btnSpectators = false
+                            this.issuesArea = null
+                            this.winner = null
+                            this.socket = null
+                            this.ws = null
+                            this.points = 0
+                            this.issues = {
+                                selected: null,
+                                issues: []
+                            }
+                        })
+                    }, this.timeout)
+                }
+            },
+            logout() {
+                M.toast({
+                    html: `Goodbye ${this.username}!`,
+                    classes: 'rounded brown'
+                })
+                this.socket.close()
+                this.loading = false
+                this.admin = false
+                this.perspective = false
+                this.reveal = false
+                this.completedScores = false
+                this.visibility = false
+                this.delete_forever = false
+                this.emojis = false
+                this.newIssue = false
+                this.btnEmojis = false
+                this.btnSpectators = false
+                this.issuesArea = null
+                this.winner = null
+                this.socket = null
+                this.ws = null
+                this.points = 0
+                this.issues = {
+                    selected: null,
+                    issues: []
+                }
+            },
+            copyLink() {
+                navigator.clipboard.writeText(location.href)
+                M.toast({ html: 'The link was copied to the clipboard!', classes: 'rounded' })
+            }
+        },
+        created() {
+            const queryString = window.location.search
+            const urlParams = new URLSearchParams(queryString)
+            const server = urlParams.get('session')
+            this.session = (server !== null && server !== '' && server !== undefined) ? server : ''
+        },
+        mounted() {
+            M.updateTextFields()
+            M.Modal.init(document.querySelectorAll('.modal'), {})
+            document.querySelector('emoji-picker').addEventListener('emoji-click', data => {
+                this.throwEmojis(data.detail.unicode)
+            })
+        },
+        computed: {
+            dynamicStyle() {
+                return (points) => {
+                    return {
+                        background: this.points === points ? '#4a72be' : '#0ba360',
+                        backgroundImage: this.points === points ?
+                            'linear-gradient(to top, #4a72be 0%, #224574 100%)' : 'linear-gradient(to top, #0ba360 0%, #3cba92 100%)'
+                    }
+                }
+            },
+            toolTipData() {
+                return this.spectators.map(player => player.admin ? `⭐ ${player.username}` : `👁️ ${player.username}`).join('<br>')
+            },
+            winnerData() {
+                return `( ${this.winner.map(points => points).join(' | ')} )`
+            },
+            issuesData() {
+                const issue = this.issues.issues.find(issue => issue.index === this.issues.selected)
+                return `(${issue.points}) ${issue.issue}`
+            }
+        },
+        updated() {
+            M.updateTextFields()
+            M.Tooltip.init(document.querySelectorAll('.tooltipped'))
+        }
+    })
+</script>
+
+</html>

@@ -1,0 +1,475 @@
+body {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    padding-top: 200px;
+    padding-bottom: 200px;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+label {
+    color: gainsboro !important;
+}
+
+input,
+.materialize-textarea {
+    color: white !important;
+    border-bottom: 1px solid white !important;
+}
+
+p {
+    font-size: 13px !important;
+}
+
+h5 {
+    margin: 12px 0px !important;
+}
+
+select {
+    width: auto !important;
+}
+
+emoji-picker {
+    right: 0;
+    bottom: 80px;
+    height: 400px;
+    position: fixed;
+    z-index: 11 !important;
+    --num-groups: 9;
+    --num-columns: 8;
+}
+
+.mb-0 {
+    margin-bottom: 0px !important;
+}
+
+.mr-1 {
+    margin-right: 10px !important;
+}
+
+.py-2 {
+    padding: 4px 8px !important;
+}
+
+.p-0 {
+    padding: 0px !important;
+}
+
+.badgePoints {
+    font-weight: bold;
+    font-size: 1.25em;
+    color: #fff;
+    border-radius: 8px;
+}
+
+.collection h4 {
+    margin: 0px !important;
+    padding: 10px !important;
+}
+
+.collection-item h5,
+.collection-item h6 {
+    margin-top: 0px !important;
+}
+
+.collection-item a.btn {
+    aspect-ratio: 1;
+    padding: 0px 10px !important;
+}
+
+i.circle {
+    font-style: normal !important;
+}
+
+.brand-logo {
+    font-size: 2rem !important;
+}
+
+.bold {
+    font-weight: bold !important;
+}
+
+.active {
+    color: white !important;
+}
+
+.btn-large[disabled],
+.btn[disabled] {
+    background-color: #C9CCD3;
+    background-blend-mode: lighten;
+    background-image: linear-gradient(-180deg, rgba(255, 255, 255, 0.50) 0%, rgba(0, 0, 0, 0.50) 100%);
+}
+
+.teal,
+.btn-large,
+.btn {
+    background-color: #0ba360;
+    background-image: linear-gradient(to top, #0ba360 0%, #3cba92 100%);
+}
+
+.blue {
+    background-color: #4a72be;
+    background-image: linear-gradient(to top, #4a72be 0%, #224574 100%);
+}
+
+.red {
+    background-color: #bd143e;
+    background-image: linear-gradient(to top, #ac0e35 0%, #bd2121 100%);
+}
+
+.material-icons {
+    text-shadow: 0 0 1px black;
+}
+
+.fixed-action-btn.left {
+    right: 69px;
+    z-index: 10 !important;
+}
+
+.admin-options {
+    position: absolute !important;
+    right: -18px;
+}
+
+.admin-options:nth-child(1) {
+    top: -40px;
+}
+
+.admin-options:nth-child(2) {
+    top: 10px;
+}
+
+.admin-options:nth-child(3) {
+    top: 60px;
+}
+
+.session-btn {
+    position: absolute !important;
+    left: 20px;
+}
+
+.issues-btn {
+    position: absolute !important;
+    top: 60px;
+    left: 20px;
+}
+
+.exit-btn {
+    position: absolute !important;
+    right: 20px;
+}
+
+.share-btn {
+    position: absolute !important;
+    top: 60px;
+    right: 20px;
+}
+
+.admin-badge {
+    position: absolute !important;
+    right: -18px;
+    top: -45px;
+    color: #F7CE68;
+    font-size: 40px !important;
+}
+
+.edaem {
+    height: 56px;
+}
+
+.halfway-fab {
+    margin-bottom: -20px;
+}
+
+.points-badge {
+    color: white !important;
+    margin: 0 !important;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.nav-content.row {
+    margin-bottom: 0px !;
+}
+
+.box-flying {
+    color: white;
+    padding: 1px 10px;
+    border-radius: 10px;
+    margin-left: -15px;
+    margin-top: -5px;
+    position: absolute;
+    z-index: 10;
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+a.btn-options {
+    margin-top: 2.5px;
+    margin-bottom: 2.5px;
+    padding: 0px !important;
+    aspect-ratio: 1;
+    z-index: 998 !important;
+}
+
+.nav-wrapper {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.nav-extended {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 10;
+}
+
+.page-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+.page-footer h4 {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.card-panel {
+    padding: 0px !important;
+}
+
+.card-panel h1,
+.card-panel i {
+    margin-top: 25px;
+    margin-bottom: 25px;
+}
+
+.flip-card {
+    aspect-ratio: 1 / 1.25 !important;
+    margin-bottom: 10px;
+}
+
+/* This container is needed to position the front and back side */
+.flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.8s;
+    transform-style: preserve-3d;
+}
+
+/* Do an horizontal flip when you move the mouse over the flip box container */
+.reveal {
+    transform: rotateY(180deg);
+}
+
+/* Position the front and back side */
+.flip-card-front,
+.flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    /* Safari */
+    backface-visibility: hidden;
+}
+
+/* Style the back side */
+.flip-card-back {
+    transform: rotateY(180deg);
+}
+
+.greetings {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%)
+}
+
+.py-0 {
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+}
+
+.pt-1 {
+    padding-top: 10px !important;
+}
+
+.mt-1 {
+    margin-top: 10px !important;
+}
+
+.mx-0 {
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
+}
+
+.player-enter,
+.player-leave-to {
+    transition: ease-in-out 0.5s;
+    opacity: 0;
+}
+
+.player-enter {
+    transform: translateY(30%);
+}
+
+.player-leave-to {
+    transform: translateY(-300%);
+}
+
+.player-leave-active {
+    position: absolute;
+}
+
+.backdrop-loader {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 100;
+}
+
+.card_container {
+    top: 50%;
+    transform: translateY(-50%);
+    position: relative;
+    margin: 0 auto;
+    width: 150px;
+    height: 200px;
+}
+
+.card_icon {
+    color: white;
+    position: relative;
+    text-shadow: 0 0 1px black;
+    margin: 0 auto !important;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.backdrop-loader h4 {
+    top: 50%;
+    left: 50%;
+    color: white;
+    position: absolute;
+    text-shadow: 0 0 1px black;
+    transform: translate(-50%, -50%);
+}
+
+.card_page {
+    position: absolute;
+    left: 50%;
+    top: -5px;
+    margin: 0 auto;
+    border: 2px solid #ecf0f1;
+    border-radius: 5px;
+    width: 75px;
+    height: 100px;
+    transform-origin: 0% 50%;
+    -webkit-animation: flip 1.2s infinite linear;
+    animation: flip 1.2s infinite linear;
+    -webkit-animation-fill-mode: forwards;
+    animation-fill-mode: forwards;
+}
+
+.card_page:nth-child(1) {
+    z-index: -1;
+    -webkit-animation-delay: 0.5s;
+    animation-delay: 0.5s;
+}
+
+.card_page:nth-child(2) {
+    z-index: -2;
+    -webkit-animation-delay: 1s;
+    animation-delay: 1s;
+}
+
+.card_page:nth-child(3) {
+    z-index: -3;
+    -webkit-animation-delay: 2s;
+    animation-delay: 2s;
+}
+
+@-webkit-keyframes flip {
+    0% {
+        transform: perspective(600px) rotateY(0deg);
+    }
+
+    20% {
+        background: #217dbb;
+    }
+
+    29.9% {
+        background: #217dbb;
+    }
+
+    30% {
+        transform: perspective(200px) rotateY(-90deg);
+        background: #3498db;
+    }
+
+    54.999% {
+        opacity: 1;
+    }
+
+    55% {
+        opacity: 0;
+    }
+
+    60% {
+        transform: perspective(200px) rotateY(-180deg);
+        background: #3498db;
+    }
+
+    100% {
+        transform: perspective(200px) rotateY(-180deg);
+        background: #3498db;
+    }
+}
+
+@keyframes flip {
+    0% {
+        transform: perspective(600px) rotateY(0deg);
+    }
+
+    20% {
+        background: #217dbb;
+    }
+
+    29.9% {
+        background: #217dbb;
+    }
+
+    30% {
+        transform: perspective(200px) rotateY(-90deg);
+        background: #3498db;
+    }
+
+    54.999% {
+        opacity: 1;
+    }
+
+    55% {
+        opacity: 0;
+    }
+
+    60% {
+        transform: perspective(200px) rotateY(-180deg);
+        background: #3498db;
+    }
+
+    100% {
+        transform: perspective(200px) rotateY(-180deg);
+        background: #3498db;
+    }
+}
